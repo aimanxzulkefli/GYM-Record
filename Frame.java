@@ -1,6 +1,10 @@
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import javax.swing.ImageIcon;
@@ -21,9 +25,8 @@ public class Frame extends JFrame {
     JTextField workTimeText, restTimeText, roundText;
     move movingBar;
     JProgressBar workBar;
-    int round;
     JLabel countLabel;
-    boolean exit;
+    JFrame timerFrame;
 
     Frame() {
         this.setTitle("GYM Record");
@@ -220,7 +223,6 @@ public class Frame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 start();
-
             }
         });
 
@@ -231,8 +233,9 @@ public class Frame extends JFrame {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TODO Auto-generated method stub
-
+                addToDatabase(weightText1, weightText2, weightText3, weightText4, weightText5, 
+                            weightText1_1, weightText2_1, weightText3_1, weightText4_1, weightText5_1, 
+                            workTimeText, restTimeText);
             }
 
         });
@@ -245,13 +248,57 @@ public class Frame extends JFrame {
         setDate();
     }
 
+    protected void addToDatabase(JTextField weightText1,JTextField weightText2,JTextField weightText3,JTextField weightText4,JTextField weightText5,
+                                JTextField weightText1_1,JTextField weightText2_1,JTextField weightText3_1,JTextField weightText4_1,JTextField weightText5_1,
+                                JTextField workTimeText,JTextField restTimeText)
+    {
+        String kg1 = weightText1.getText();
+        String kg2 = weightText2.getText();
+        String kg3 = weightText3.getText();
+        String kg4 = weightText4.getText();
+        String kg5 = weightText5.getText();
+
+        String r1 = weightText1_1.getText();
+        String r2 = weightText2_1.getText();
+        String r3 = weightText3_1.getText();
+        String r4 = weightText4_1.getText();
+        String r5 = weightText5_1.getText();
+        
+        String wTime = workTimeText.getText();
+        String rTime = restTimeText.getText();
+
+        try {
+            Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
+            Connection con = DriverManager.getConnection("jdbc:ucanaccess://C:\\Users\\Rukiah\\OneDrive\\Documents\\GYMRecord.accdb");
+            PreparedStatement ps = con.prepareStatement("Insert into GYMRecord(Weight_1,Weight_2,Weight_3,Weight_4,Weight_5,Repetition_1,Repetition_2,Repetition_3,Repetition_4,Repetition_5,Work_Time,Rest_Time)values (?,?,?,?,?,?,?,?,?,?,?,?)");
+            ps.setString(1,kg1);
+            ps.setString(2,kg2);
+            ps.setString(3,kg3);
+            ps.setString(4,kg4);
+            ps.setString(5,kg5);
+            ps.setString(6,r1);
+            ps.setString(7,r2);
+            ps.setString(8,r3);
+            ps.setString(9,r4);
+            ps.setString(10,r5);
+            ps.setString(11,wTime);
+            ps.setString(12,rTime);
+            ps.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Record Save");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     void start() {
 
         if (workTimeText.getText().isEmpty() || restTimeText.getText().isEmpty() || roundText.getText().isEmpty()) {
             JOptionPane.showMessageDialog(null, "Please enter Work time, Rest time and Round", null,
                     JOptionPane.WARNING_MESSAGE);
         } else {
-            JFrame timerFrame = new JFrame();
+            timerFrame = new JFrame();
             timerFrame.setTitle("Workout Timer");
             timerFrame.setPreferredSize(new Dimension(320, 160));
             timerFrame.setLayout(new FlowLayout());
@@ -259,25 +306,23 @@ public class Frame extends JFrame {
             workBar = new JProgressBar();
             workBar.setString(" ");
             workBar.setPreferredSize(new Dimension(300, 70));
+
             JPanel countPanel = new JPanel();
             countPanel.setPreferredSize(new Dimension(300, 30));
             countLabel = new JLabel();
-            countLabel.setText(" ");
+            countLabel.setText("Round");
             countLabel.setForeground(Color.BLACK);
             countLabel.setFont(new Font("Sans Serif", Font.BOLD, 18));
             countPanel.add(countLabel);
-            int i = Integer.parseInt(roundText.getText());
-
+            
             timerFrame.add(workBar);
             timerFrame.add(countPanel);
             timerFrame.pack();
             timerFrame.setVisible(true);
 
-            for (int l = 0; l<i;l++){
-                movingBar = new move(workBar, workTimeText, countLabel);
-                movingBar.start();
-                countLabel.setText("Round "+l);
-            }
+            movingBar = new move(workBar, workTimeText, roundText, timerFrame);
+            movingBar.start();
+    
         }
     }
 
@@ -285,50 +330,58 @@ public class Frame extends JFrame {
 
         JProgressBar copyBar;
         JTextField copyWText;
-        JLabel copyRLabel;
+        JTextField copyRLabel;
+        JFrame copyFrame;
 
-        move(JProgressBar copyBar, JTextField copyWText, JLabel copyRLabel) {
+        move(JProgressBar copyBar, JTextField copyWText, JTextField copyRLabel, JFrame copyFrame) {
             copyBar = workBar;
             copyWText = workTimeText;
-            copyRLabel = countLabel;
+            copyRLabel = roundText;
+            copyFrame = timerFrame;
         }
 
         public void run() {
 
-            double wTime = Double.parseDouble(workTimeText.getText());
-            double wTimef = wTime * 10;
-            int counter = 100;
-            workBar.setString("Work Now");
-            workBar.setFont(new Font("Sans Serif", Font.BOLD, 30));
-            workBar.setForeground(new Color(50, 205, 50));
-            workBar.setStringPainted(true);
-            while (counter >= 0) {
-                workBar.setValue(counter);
-                try {
-                    sleep((long) wTimef);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                counter -= 1;
-            }
+            int i = Integer.parseInt(roundText.getText());
+            for(int l=0;l<i;l++){
 
-            do {
-                double rTime = Double.parseDouble(restTimeText.getText());
-                double rTimef = rTime * 10;
-
-                workBar.setString("Take a rest");
+                countLabel.setText("Round "+(l+1));
+                double wTime = Double.parseDouble(workTimeText.getText());
+                double wTimef = wTime * 10;
+                int counter = 100;
+                workBar.setString("Work Now");
                 workBar.setFont(new Font("Sans Serif", Font.BOLD, 30));
-                workBar.setForeground(new Color(255, 0, 0));
+                workBar.setForeground(new Color(50, 205, 50));
                 workBar.setStringPainted(true);
-
-                workBar.setValue(counter);
-                try {
-                    sleep((long) rTimef);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                while (counter >= 0) {
+                    workBar.setValue(counter);
+                    try {
+                        sleep((long) wTimef);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    counter -= 1;
                 }
-                counter += 1;
-            } while (workBar.getValue() <= 100);
+
+                do {
+                    double rTime = Double.parseDouble(restTimeText.getText());
+                    double rTimef = rTime * 10;
+
+                    workBar.setString("Take a rest");
+                    workBar.setFont(new Font("Sans Serif", Font.BOLD, 30));
+                    workBar.setForeground(new Color(255, 0, 0));
+                    workBar.setStringPainted(true);
+
+                    workBar.setValue(counter);
+                    try {
+                        sleep((long) rTimef);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    counter += 1;
+                } while (workBar.getValue() < 100);
+            }
+            timerFrame.dispose();
         }
     }
 

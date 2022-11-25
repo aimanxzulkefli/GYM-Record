@@ -164,6 +164,7 @@ public class Frame extends JFrame {
         insidePbottomC.setLayout(new GridLayout(3, 2));
         insidePbottom.add(insidePbottomC, BorderLayout.CENTER);
 
+        // Timer space
         JLabel timerLabel = new JLabel("Timer");
         timerLabel.setForeground(new Color(255, 253, 250));
         timerLabel.setBackground(new Color(249, 104, 21));
@@ -248,6 +249,7 @@ public class Frame extends JFrame {
         setDate();
     }
 
+    // Connect to database MS Access
     protected void addToDatabase(JTextField weightText1,JTextField weightText2,JTextField weightText3,JTextField weightText4,JTextField weightText5,
                                 JTextField weightText1_1,JTextField weightText2_1,JTextField weightText3_1,JTextField weightText4_1,JTextField weightText5_1,
                                 JTextField workTimeText,JTextField restTimeText)
@@ -292,6 +294,7 @@ public class Frame extends JFrame {
         }
     }
 
+    // Timer
     void start() {
 
         if (workTimeText.getText().isEmpty() || restTimeText.getText().isEmpty() || roundText.getText().isEmpty()) {
@@ -326,6 +329,7 @@ public class Frame extends JFrame {
         }
     }
 
+    // Progress bar, timer
     class move extends Thread {
 
         JProgressBar copyBar;
@@ -385,6 +389,7 @@ public class Frame extends JFrame {
         }
     }
 
+    // Date
     public void setDate() {
         while (true) {
             date = dateFormat.format(Calendar.getInstance().getTime());
